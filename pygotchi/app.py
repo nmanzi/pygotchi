@@ -49,7 +49,7 @@ async def websocket_video(websocket: WebSocket):
                     "background": game[user].tama.version if game[user].tama.version is not None else "p1"
                 }
             )
-            await asyncio.sleep(1 / 5)
+            await asyncio.sleep(1 / 120)
     except WebSocketDisconnect:
         print("Client disconnected")
     except Exception as e:
