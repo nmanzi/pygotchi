@@ -191,6 +191,8 @@ public:
   void Stop();
 
 private: 
+  pthread_t mainloop_thread = 0;
+
 };
 
 #endif
@@ -2184,43 +2186,45 @@ Tama::Tama() {
 }
 
 void Tama::Start(){
-    pthread_t thread;
     keep_going = true;
-    pthread_create(&thread, 0, tamalib_mainloop, 0);
+    pthread_create(&mainloop_thread, 0, tamalib_mainloop, 0);
 }
 
 void Tama::Stop(){
     keep_going = false;
+    if (mainloop_thread) {
+      pthread_join(mainloop_thread, nullptr);
+      mainloop_thread = 0;
+    }
 }
 
 bool Tama::Runs() {
   return keep_going;
 }
 
-std::vector<bool> Tama::GetIcons() { 
+std::vector<bool> Tama::GetIcons() {
+  std::vector<bool> icon (ICON_NUM) ;
 
-    std::vector<bool> icon (ICON_NUM) ;
-
-    int i;
-    for (i = 0 ; i < ICON_NUM ; i++) {
-        icon[i] = icon_buffer[(u8_t)i] != 0;
-    }
-    
-    return icon;
+  int i;
+  for (i = 0 ; i < ICON_NUM ; i++) {
+      icon[i] = icon_buffer[(u8_t)i] != 0;
   }
+  
+  return icon;
+}
 
-  std::vector<std::vector<bool>> Tama::GetMatrix() {
-    std::vector<std::vector<bool>> matrix(LCD_HEIGHT, std::vector<bool>(LCD_WIDTH, false));
-    int i, j, k;
-    for (i = 0 ; i < LCD_HEIGHT ; i++) {
-        for (j = 0 ; j < LCD_WIDTH/8 ; j++) {
-          for (k = 0; k < 8; k++) {
-            matrix[i][8 * j + 7 - k] = (int)(matrix_buffer[(u8_t)i][(u8_t)j] >> k) & 1;
-          }
+std::vector<std::vector<bool>> Tama::GetMatrix() {
+  std::vector<std::vector<bool>> matrix(LCD_HEIGHT, std::vector<bool>(LCD_WIDTH, false));
+  int i, j, k;
+  for (i = 0 ; i < LCD_HEIGHT ; i++) {
+      for (j = 0 ; j < LCD_WIDTH/8 ; j++) {
+        for (k = 0; k < 8; k++) {
+          matrix[i][8 * j + 7 - k] = (int)(matrix_buffer[(u8_t)i][(u8_t)j] >> k) & 1;
         }
-    }
-    return matrix;
+      }
   }
+  return matrix;
+}
 
 int Tama::GetFreq() { return play_freq; }
 
